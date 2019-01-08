@@ -6,6 +6,10 @@ const creds = require('./mysql_cred.js');
 const sha1 = require('sha1');
 const db = mysql.createConnection( creds );
 
+const loggedInUsers = {
+
+};
+
 const server = express();
 server.use(express.urlencoded({ extended: false }))
 server.use( express.json() );
@@ -18,7 +22,7 @@ server.post('/login', (request, response)=>{
 		const password = sha1(request.body.pass);
 		delete request.body.pass;
 		const query = "SELECT * FROM `users` WHERE `email`='"+username+"' AND `password`='"+password+"'";
-		db.query(query, (error, fields) => {
+		db.query(query, (error, data) => {
 			if(error){
 				response.send('error in query');
 				return;
@@ -27,6 +31,12 @@ server.post('/login', (request, response)=>{
 				response.send('error with username or password');
 				return;
 			}
+			const userID = data[0].ID;
+			const userName = data[0].name;
+
+			const userToken = sha1(username+password+Date.now())
+			loggedInUsers[ userToken ] = { id: userID, name: userName };
+			response.cookie('userauth',userToken);
 			response.send('you have logged in');
 		})
 	})
