@@ -4,6 +4,7 @@ const express = require('express');
 const mysql = require('mysql');
 const creds = require('./mysql_cred.js');
 const sha1 = require('sha1');
+const cookieParser = require('cookie-parser');
 const db = mysql.createConnection( creds );
 
 const loggedInUsers = {
@@ -13,8 +14,18 @@ const loggedInUsers = {
 const server = express();
 server.use(express.urlencoded({ extended: false }))
 server.use( express.json() );
+server.use(cookieParser());
 
 server.use ( express.static( __dirname + '/documentroot'));
+
+server.get('/something', (request, response)=>{
+	if(loggedInUsers.hasOwnProperty( request.cookies.userauth)){
+		const user = loggedInUsers[request.cookies.userauth];
+		response.send(`you are user id ${user.id} and name ${user.name}`);
+	} else {
+		response.send('you must be logged in to do this');
+	}
+})
 
 server.post('/login', (request, response)=>{
 	db.connect(()=>{
@@ -27,7 +38,7 @@ server.post('/login', (request, response)=>{
 				response.send('error in query');
 				return;
 			}
-			if(fields.length!==1){
+			if(data.length!==1){
 				response.send('error with username or password');
 				return;
 			}
