@@ -7,4 +7,4 @@ module.exports = {
   database : 'c1018db',
   port: '8889'
 
-});
+};
