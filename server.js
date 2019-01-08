@@ -1,6 +1,8 @@
 
 
 const express = require('express');
+const mysql = require('mysql');
+const creds = require('./mysql_cred.js');
 
 const server = express();
 
