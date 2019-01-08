@@ -17,7 +17,18 @@ server.post('/login', (request, response)=>{
 		const username = request.body.user;
 		const password = sha1(request.body.pass);
 		delete request.body.pass;
-		console.log(username, password);
+		const query = "SELECT * FROM `users` WHERE `email`='"+username+"' AND `password`='"+password+"'";
+		db.query(query, (error, fields) => {
+			if(error){
+				response.send('error in query');
+				return;
+			}
+			if(fields.length!==1){
+				response.send('error with username or password');
+				return;
+			}
+			response.send('you have logged in');
+		})
 	})
 })
 
