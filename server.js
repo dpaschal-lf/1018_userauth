@@ -28,21 +28,57 @@ server.get('/gettime', (request, response)=>{
 	})
 })
 
+function getIPAddress( request ){
+	return (request.headers['x-forwarded-for'] || '').split(',').pop() || 
+				         request.connection.remoteAddress || 
+				         request.socket.remoteAddress || 
+				         request.connection.socket.remoteAddress
+}
+
 function checkForLogin( request, callback ){
 	if(!request.cookies.userauth){
 		callback( false );
 	} else {
-		const query = `SELECT * FROM \`currentConnections\`
+		const ip = getIPAddress(request);
+		const updateQuery = `UPDATE \`currentConnections\`
+						SET \`connectionCount\` = \`connectionCount\`+1,
+						\`ipAddress\` = '${ip}',
+						\`lastConnection\` = NOW()
+					   WHERE \`token\` = '${request.cookies.userauth}'`;
+		db.query( updateQuery, (error, result)=>{
+			if(result.affectedRows === 1){
+				const selectQuery = `SELECT * FROM \`currentConnections\`
 			WHERE \`token\` = '${request.cookies.userauth}'`;
-		db.query(query, (error, data)=>{
-			if(!error && data.length===1){
-				callback( data[0] );
-			} else {
-				callback( false );
+				db.query(selectQuery, (error, data)=>{
+					if(!error && data.length === 1){
+						callback( data[0]);
+					} else {
+						callback( false);
+					}
+				})				
 			}
 		})
 	}
 }
+
+server.get('/logout', (request, response)=>{
+	checkForLogin( request, (isLoggedIn)=>{
+		if(isLoggedIn){
+			response.cookie('userauth','', { expires: new Date(Date.now() -3600) });
+			const query = "DELETE FROM `currentConnections` WHERE token='"+request.cookies.userauth+"'";
+			db.query(query, (error)=>{
+				if(!error){
+					response.send('you are now logged out');
+				} else {
+					response.send('error logging you out');
+				}
+			})
+			
+		} else {
+			response.send( 'you are already not logged in');
+		}
+	})	
+})
 
 server.post('/login', (request, response)=>{
 	db.connect(()=>{
@@ -64,10 +100,7 @@ server.post('/login', (request, response)=>{
 
 			const userToken = request.cookies.userauth || sha1(username+password+Date.now());
 
-			const ip = (request.headers['x-forwarded-for'] || '').split(',').pop() || 
-				         request.connection.remoteAddress || 
-				         request.socket.remoteAddress || 
-				         request.connection.socket.remoteAddress
+			const ip = getIPAddress(request);
 
 			const connectionQuery = `INSERT INTO \`currentConnections\` 
 						SET \`token\` = '${userToken}',
