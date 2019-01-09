@@ -35,20 +35,46 @@ server.post('/login', (request, response)=>{
 		const query = "SELECT * FROM `users` WHERE `email`='"+username+"' AND `password`='"+password+"'";
 		db.query(query, (error, data) => {
 			if(error){
-				response.send('error in query');
+				response.send({success: false, error: 'error in query'});
 				return;
 			}
 			if(data.length!==1){
-				response.send('error with username or password');
+				response.send({success: false, error: 'error with username or password'});
 				return;
 			}
 			const userID = data[0].ID;
 			const userName = data[0].name;
 
-			const userToken = sha1(username+password+Date.now())
-			loggedInUsers[ userToken ] = { id: userID, name: userName };
-			response.cookie('userauth',userToken);
-			response.send('you have logged in');
+			const userToken = request.cookies.userauth || sha1(username+password+Date.now());
+
+			const ip = (request.headers['x-forwarded-for'] || '').split(',').pop() || 
+				         request.connection.remoteAddress || 
+				         request.socket.remoteAddress || 
+				         request.connection.socket.remoteAddress
+
+			const connectionQuery = `INSERT INTO \`currentConnections\` 
+						SET \`token\` = '${userToken}',
+						\`userID\` = ${userID},
+						\`connected\` = NOW(),
+						\`connectionCount\` = \`connectionCount\`+1,
+						\`ipAddress\` = '${ip}',
+						\`lastConnection\` = NOW()
+						ON DUPLICATE KEY UPDATE 
+						\`connectionCount\` = \`connectionCount\`+1,
+						\`ipAddress\` = '${ip}',
+						\`lastConnection\` = NOW()
+					`;
+			db.query(connectionQuery, (error)=> {
+				if(!error){
+					response.cookie('userauth',userToken);
+					response.send({success: true, message: 'you have logged in'});					
+				} else {
+					response.send({success: false, error: 'could not log you in'});
+				}
+			})
+
+			//loggedInUsers[ userToken ] = { id: userID, name: userName };
+
 		})
 	})
 })
