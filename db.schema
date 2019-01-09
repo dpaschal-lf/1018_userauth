@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost:8889
--- Generation Time: Jan 09, 2019 at 08:45 PM
+-- Generation Time: Jan 09, 2019 at 09:46 PM
 -- Server version: 5.5.42
 -- PHP Version: 7.0.0
 
@@ -28,7 +28,7 @@ CREATE TABLE `currentConnections` (
   `connectionCount` mediumint(8) unsigned NOT NULL,
   `ipAddress` varchar(20) COLLATE utf8_unicode_ci NOT NULL,
   `lastConnection` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 --
 -- Indexes for dumped tables
@@ -49,4 +49,4 @@ ALTER TABLE `currentConnections`
 -- AUTO_INCREMENT for table `currentConnections`
 --
 ALTER TABLE `currentConnections`
-  MODIFY `ID` int(10) unsigned NOT NULL AUTO_INCREMENT;
+  MODIFY `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,AUTO_INCREMENT=7;

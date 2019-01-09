@@ -18,14 +18,31 @@ server.use(cookieParser());
 
 server.use ( express.static( __dirname + '/documentroot'));
 
-server.get('/something', (request, response)=>{
-	if(loggedInUsers.hasOwnProperty( request.cookies.userauth)){
-		const user = loggedInUsers[request.cookies.userauth];
-		response.send(`you are user id ${user.id} and name ${user.name}`);
-	} else {
-		response.send('you must be logged in to do this');
-	}
+server.get('/gettime', (request, response)=>{
+	checkForLogin( request, (isLoggedIn)=>{
+		if(isLoggedIn){
+			response.send( `user id ${isLoggedIn.userID} ${Date.now()}`);
+		} else {
+			response.send( 'you must be logged in to use this endpoint');
+		}
+	})
 })
+
+function checkForLogin( request, callback ){
+	if(!request.cookies.userauth){
+		callback( false );
+	} else {
+		const query = `SELECT * FROM \`currentConnections\`
+			WHERE \`token\` = '${request.cookies.userauth}'`;
+		db.query(query, (error, data)=>{
+			if(!error && data.length===1){
+				callback( data[0] );
+			} else {
+				callback( false );
+			}
+		})
+	}
+}
 
 server.post('/login', (request, response)=>{
 	db.connect(()=>{
