@@ -1,0 +1,26 @@
+{
+  "name": "userauth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpaschal-lf/1018_userauth.git"
+  },
+  "author": "daniel paschal",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dpaschal-lf/1018_userauth/issues"
+  },
+  "homepage": "https://github.com/dpaschal-lf/1018_userauth#readme",
+  "dependencies": {
+    "cookie-parser": "^1.4.3",
+    "express": "^4.16.4",
+    "mysql": "^2.16.0",
+    "sha1": "^1.1.1"
+  }
+}
